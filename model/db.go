@@ -40,10 +40,10 @@ func (db *Database) tmp() {
 // this three function is for admin category JOB3
 
 // InsertCategory COMPLETE
-func (db *Database) InsertCategory(categoryName string){
+func (db *Database) InsertCategory(categoryName string) {
 	categories := make([]Category, 10)
-	db.postgres.Find(&categories,"Name =?" ,categoryName)
-	if (len(categories))>0 {
+	db.postgres.Find(&categories, "Name =?", categoryName)
+	if (len(categories)) > 0 {
 		print("there is another category with same name")
 		return
 	}
@@ -56,19 +56,32 @@ func (db *Database) InsertCategory(categoryName string){
 }
 
 // ModifyCategory COMPLETE
-func (db *Database) ModifyCategory(newName string, oldName string){
+func (db *Database) ModifyCategory(newName string, oldName string) {
 	db.postgres.Model(Category{}).Where("name = ?", oldName).Updates(Category{Name: newName})
 	db.postgres.Model(Product{}).Where("category = ?", oldName).Updates(Product{Category: newName})
 }
 
+// GetCategories COMPLETE
+func (db *Database) GetCategories() []string {
+	allCategories := make([]Category, 20)
+	db.postgres.Find(&allCategories)
+	result := make([]string, 0)
+	for _, cat := range allCategories {
+		if cat.Name != "" {
+			result = append(result, cat.Name)
+		}
+	}
+	return result
+}
+
 // DeleteCategory COMPLETE
-func (db *Database) DeleteCategory(categoryName string){
+func (db *Database) DeleteCategory(categoryName string) {
 	db.postgres.Model(Product{}).Where("category = ?", categoryName).Updates(Product{Category: "NO CATEGORY"})
-	db.postgres.Where("name = ?",categoryName).Delete(&Category{})
+	db.postgres.Where("name = ?", categoryName).Delete(&Category{})
 }
 
 // SeeAllReceipt COMPLETE
-func (db *Database) SeeAllReceipt() []Receipt{
+func (db *Database) SeeAllReceipt() []Receipt {
 	receipts := make([]Receipt, 10)
 	result := db.postgres.Find(&receipts)
 	if result.Error != nil {
@@ -78,7 +91,7 @@ func (db *Database) SeeAllReceipt() []Receipt{
 }
 
 // SeeReceiptByCode COMPLETE
-func (db *Database) SeeReceiptByCode(code string) []Receipt{
+func (db *Database) SeeReceiptByCode(code string) []Receipt {
 	receipts := make([]Receipt, 10)
 	result := db.postgres.Where("tracingCode=?", code).Find(&receipts)
 	if result.Error != nil {
@@ -88,9 +101,9 @@ func (db *Database) SeeReceiptByCode(code string) []Receipt{
 }
 
 // AddReceipt COMPLETE
-func (db *Database) AddReceipt(productName string, soldNumber int, customerEmail string, customerFirstname string, customerLastname string, customerAddress string,amount int, date string,tracingCode string,status string){
+func (db *Database) AddReceipt(productName string, soldNumber int, customerEmail string, customerFirstname string, customerLastname string, customerAddress string, amount int, date string, tracingCode string, status string) {
 	receipts := []Receipt{
-		{ProductName: productName, SoldNumber: soldNumber, CustomerAddress:customerAddress, CustomerEmail:customerEmail, CustomerFirstname:customerFirstname, CustomerLastname:customerLastname, Amount:amount, Date:date, TracingCode:tracingCode, Status:status},
+		{ProductName: productName, SoldNumber: soldNumber, CustomerAddress: customerAddress, CustomerEmail: customerEmail, CustomerFirstname: customerFirstname, CustomerLastname: customerLastname, Amount: amount, Date: date, TracingCode: tracingCode, Status: status},
 	}
 	for _, rescps := range receipts {
 		db.postgres.Create(&rescps)
@@ -101,4 +114,3 @@ func (db *Database) AddReceipt(productName string, soldNumber int, customerEmail
 func (db *Database) ChangeReceiptStatus(code string, status string) {
 	db.postgres.Model(Receipt{}).Where("tracingCode = ?", code).Updates(Receipt{Status: status})
 }
-
