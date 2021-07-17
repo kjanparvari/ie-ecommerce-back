@@ -143,6 +143,15 @@ func (db *Database) ChangeReceiptStatus(code string, status string) {
 	db.postgres.Model(Receipt{}).Where("tracingCode = ?", code).Updates(Receipt{Status: status})
 }
 
+func (db *Database) seeClientReceipt(email string) []Receipt {
+	receipts := make([]Receipt, 10)
+	result := db.postgres.Where("costumerEmail=?", email).Find(&receipts)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return receipts
+}
+
 func (db *Database) InsertUser(email string, password string, firstname string, lastname string, balance int) {
 	users := make([]User, 10)
 	db.postgres.Find(&users, "Email =?", email)
