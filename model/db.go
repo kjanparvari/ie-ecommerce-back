@@ -5,6 +5,7 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"os"
+	"time"
 )
 
 type Database struct {
@@ -150,6 +151,29 @@ func (db *Database) seeClientReceipt(email string) []Receipt {
 		panic(result.Error)
 	}
 	return receipts
+}
+
+func (db *Database) BuyProduct(email string, name string, number int) string {
+	products := make([]Product, 10)
+	db.postgres.Find(&products, "name =?", name)
+	users := make([]User, 10)
+	db.postgres.Find(&users, "email = ?", email)
+	if len(products) == 0 {
+		return "There Is No Such Product"
+	}
+	if products[0].Stock < number {
+		return "There Is Not Enough Stocks"
+	}
+	if users[0].Balance < number*products[0].Price {
+		return "Not Enough Money"
+	}
+	db.postgres.Model(Product{}).Where("name = ?", name).Updates(Product{Stock: products[0].Stock - number})
+	db.postgres.Model(User{}).Where("email = ?", email).Updates(User{Balance: users[0].Balance - number*products[0].Price})
+	// Using time.Now() function.
+	dt := time.Now()
+	formatedTime := dt.Format(time.RFC1123)
+	db.AddReceipt(name, number, email, users[0].Firstname, users[0].Lastname, users[0].Address, number*products[0].Price, formatedTime, formatedTime+email, "در حال انجام")
+	return "Done"
 }
 
 func (db *Database) InsertUser(email string, password string, firstname string, lastname string, balance int) {
