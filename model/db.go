@@ -5,7 +5,6 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"os"
-	"time"
 )
 
 type Database struct {
@@ -23,7 +22,7 @@ func (db *Database) Init() {
 	}
 	log.Println("[Database]: db is up")
 	// the bellow commented code creates tables in database
-	//db.createTables()
+	db.postgres.AutoMigrate(User{}, Admin{}, Product{}, Category{}, Receipt{})
 }
 
 func (db *Database) createTables() {
@@ -153,6 +152,22 @@ func (db *Database) seeClientReceipt(email string) []Receipt {
 	return receipts
 }
 
+func (db *Database) InsertUser(email string, password string, firstname string, lastname string, balance int, Address string) {
+	users := make([]User, 10)
+	db.postgres.Find(&users, "Email =?", email)
+	if (len(users)) > 0 {
+		log.Println("there is another users with same name")
+		return
+	}
+	users = []User{
+		{Email: email, Password: password, Firstname: firstname, Lastname: lastname, Balance: balance, Address: Address},
+	}
+	for _, us := range users {
+		db.postgres.Create(&us)
+	}
+}
+
+
 func (db *Database) BuyProduct(email string, name string, number int) string {
 	products := make([]Product, 10)
 	db.postgres.Find(&products, "name =?", name)
@@ -174,19 +189,4 @@ func (db *Database) BuyProduct(email string, name string, number int) string {
 	formatedTime := dt.Format(time.RFC1123)
 	db.AddReceipt(name, number, email, users[0].Firstname, users[0].Lastname, users[0].Address, number*products[0].Price, formatedTime, formatedTime+email, "در حال انجام")
 	return "Done"
-}
-
-func (db *Database) InsertUser(email string, password string, firstname string, lastname string, balance int) {
-	users := make([]User, 10)
-	db.postgres.Find(&users, "Email =?", email)
-	if (len(users)) > 0 {
-		print("there is another users with same name")
-		return
-	}
-	users = []User{
-		{Email: email, Password: password, Firstname: firstname, Lastname: lastname, Balance: balance},
-	}
-	for _, us := range users {
-		db.postgres.Create(&us)
-	}
 }
