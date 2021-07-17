@@ -22,7 +22,7 @@ func (db *Database) Init() {
 	}
 	log.Println("[Database]: db is up")
 	// the bellow commented code creates tables in database
-	//db.createTables()
+	db.postgres.AutoMigrate(User{}, Admin{}, Product{}, Category{}, Receipt{})
 }
 
 func (db *Database) createTables() {
@@ -152,15 +152,15 @@ func (db *Database) seeClientReceipt(email string) []Receipt {
 	return receipts
 }
 
-func (db *Database) InsertUser(email string, password string, firstname string, lastname string, balance int) {
+func (db *Database) InsertUser(email string, password string, firstname string, lastname string, balance int, Address string) {
 	users := make([]User, 10)
 	db.postgres.Find(&users, "Email =?", email)
 	if (len(users)) > 0 {
-		print("there is another users with same name")
+		log.Println("there is another users with same name")
 		return
 	}
 	users = []User{
-		{Email: email, Password: password, Firstname: firstname, Lastname: lastname, Balance: balance},
+		{Email: email, Password: password, Firstname: firstname, Lastname: lastname, Balance: balance, Address: Address},
 	}
 	for _, us := range users {
 		db.postgres.Create(&us)

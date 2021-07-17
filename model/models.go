@@ -3,6 +3,7 @@ package model
 import "image"
 
 type User struct {
+	Address   string
 	Email     string
 	Password  string
 	Firstname string
