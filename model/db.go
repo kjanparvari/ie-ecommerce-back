@@ -71,6 +71,13 @@ func (db *Database) InsertCategory(categoryName string) {
 }
 
 // ModifyCategory COMPLETE
+func (db *Database) RiseBalance(email string, amount int) {
+	users := make([]User, 20)
+	db.postgres.Where("email = ?", email).Find(&users)
+	db.postgres.Model(User{}).Where("email = ?", email).Updates(User{Balance: users[0].Balance + amount})
+}
+
+// ModifyCategory COMPLETE
 func (db *Database) ModifyCategory(newName string, oldName string) {
 	db.postgres.Model(Category{}).Where("name = ?", oldName).Updates(Category{Name: newName})
 	db.postgres.Model(Product{}).Where("category = ?", oldName).Updates(Product{Category: newName})
