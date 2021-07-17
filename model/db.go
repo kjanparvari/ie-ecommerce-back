@@ -5,6 +5,7 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"os"
+	"time"
 )
 
 type Database struct {
@@ -166,7 +167,6 @@ func (db *Database) InsertUser(email string, password string, firstname string, 
 		db.postgres.Create(&us)
 	}
 }
-
 
 func (db *Database) BuyProduct(email string, name string, number int) string {
 	products := make([]Product, 10)
