@@ -37,7 +37,21 @@ func (db *Database) tmp() {
 	db.postgres.Exec("")
 }
 
-// this three function is for admin category JOB3
+// InsertCategory COMPLETE
+func (db *Database) InsertProduct(name string, category string, price int, stock int, soldNumber int) {
+	products := make([]Product, 10)
+	db.postgres.Find(&products, "Name =?", name)
+	if (len(products)) > 0 {
+		print("there is another category with same name")
+		return
+	}
+	products = []Product{
+		{Name: name, Category: category, Price: price, Stock: stock, SoldNumber: soldNumber},
+	}
+	for _, prods := range products {
+		db.postgres.Create(&prods)
+	}
+}
 
 // InsertCategory COMPLETE
 func (db *Database) InsertCategory(categoryName string) {
@@ -100,6 +114,20 @@ func (db *Database) SeeReceiptByCode(code string) []Receipt {
 	return receipts
 }
 
+// GetProductSort COMPLETE
+func (db *Database) GetProductSort(sortType string, categories []string, maxPrice int, minPrice int) []Product {
+	products := make([]Product, 10)
+	//db.postgres.Raw("SELECT * FROM products WHERE category IN ?", []string{"دسته بندی پنج", "jinzhu 2"}).Scan(&products)
+	//db.postgres.Not(map[string]interface{}{"category": []string{"دسته بندی سه", "دسته بندی دو"}}).Find(&products)
+
+	//fmt.Println(products)
+	result := db.postgres.Order(sortType).Where("price>? AND price<?", minPrice, maxPrice).Find(&products)
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	return products
+}
+
 // AddReceipt COMPLETE
 func (db *Database) AddReceipt(productName string, soldNumber int, customerEmail string, customerFirstname string, customerLastname string, customerAddress string, amount int, date string, tracingCode string, status string) {
 	receipts := []Receipt{
@@ -113,4 +141,19 @@ func (db *Database) AddReceipt(productName string, soldNumber int, customerEmail
 // ChangeReceiptStatus COMPLETE
 func (db *Database) ChangeReceiptStatus(code string, status string) {
 	db.postgres.Model(Receipt{}).Where("tracingCode = ?", code).Updates(Receipt{Status: status})
+}
+
+func (db *Database) InsertUser(email string, password string, firstname string, lastname string, balance int) {
+	users := make([]User, 10)
+	db.postgres.Find(&users, "Email =?", email)
+	if (len(users)) > 0 {
+		print("there is another users with same name")
+		return
+	}
+	users = []User{
+		{Email: email, Password: password, Firstname: firstname, Lastname: lastname, Balance: balance},
+	}
+	for _, us := range users {
+		db.postgres.Create(&us)
+	}
 }
