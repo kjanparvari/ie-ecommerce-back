@@ -70,7 +70,7 @@ func (db *Database) InsertCategory(categoryName string) {
 	}
 }
 
-// ModifyCategory COMPLETE
+// RiseBalance COMPLETE
 func (db *Database) RiseBalance(email string, amount int) {
 	users := make([]User, 20)
 	db.postgres.Where("email = ?", email).Find(&users)
