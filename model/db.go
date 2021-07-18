@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 	"log"
@@ -126,8 +127,11 @@ func (db *Database) SeeReceiptByCode(code string) []Receipt {
 func (db *Database) GetProductSort(name string, sortType string, categories []string, maxPrice int, minPrice int) []Product {
 	products := make([]Product, 10)
 	arrayProducts := make([]Product, 0)
-	//fmt.Println(products)
 	var result *gorm.DB
+	fmt.Println(sortType)
+	fmt.Println(categories)
+	fmt.Println(maxPrice)
+	fmt.Println(minPrice)
 	if len(name) == 0 {
 		result = db.postgres.Order(sortType).Where("price>? AND price<?", minPrice, maxPrice).Find(&products)
 	} else {

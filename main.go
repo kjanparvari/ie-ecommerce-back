@@ -13,7 +13,7 @@ func main() {
 	//db.InsertCategory("دسته بندی سه")
 	//db.InsertCategory("دسته بندی چهار")
 	//db.InsertCategory("categ01")
-	//db.InsertProduct("soup","categ01",120, 100,10)
+	//db.InsertProduct("برنج","دسته بندی 5",40, 100,10)
 	//db.InsertProduct("آش","دسته بندی پنج",150, 20,30)
 	//db.InsertProduct("مرغ","دسته بندی پنج",300, 50,40)
 	//var trash = make([]string, 10)

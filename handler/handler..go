@@ -47,7 +47,7 @@ func (handler *Handler) Init(db *model.Database) {
 }
 
 func (handler *Handler) handlerGetProducts(context echo.Context) error {
-	log.Println(fmt.Sprintf("[Server]: requested for categories"))
+	log.Println(fmt.Sprintf("[Server]: requested for Products"))
 	sort := context.QueryParam("sort")
 	name := context.QueryParam("name")
 	categories := context.QueryParams()["category"]
