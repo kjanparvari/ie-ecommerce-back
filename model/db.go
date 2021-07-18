@@ -160,12 +160,13 @@ func (db *Database) seeClientReceipt(email string) []Receipt {
 	return receipts
 }
 
-func (db *Database) InsertUser(email string, password string, firstname string, lastname string, balance int, Address string) {
+func (db *Database) InsertUser(email string, password string, firstname string, lastname string, balance int, Address string) (int, string) {
+	log.Println("[Database]: request to add user: ", email)
 	users := make([]User, 10)
 	db.postgres.Find(&users, "Email =?", email)
 	if (len(users)) > 0 {
-		log.Println("there is another users with same name")
-		return
+		log.Println("there is another users with same email")
+		return -1, "there is another users with same email"
 	}
 	users = []User{
 		{Email: email, Password: password, Firstname: firstname, Lastname: lastname, Balance: balance, Address: Address},
@@ -173,6 +174,7 @@ func (db *Database) InsertUser(email string, password string, firstname string, 
 	for _, us := range users {
 		db.postgres.Create(&us)
 	}
+	return 1, "done"
 }
 
 func (db *Database) BuyProduct(email string, name string, number int) string {
