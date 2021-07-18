@@ -123,17 +123,27 @@ func (db *Database) SeeReceiptByCode(code string) []Receipt {
 }
 
 // GetProductSort COMPLETE
-func (db *Database) GetProductSort(sortType string, categories []string, maxPrice int, minPrice int) []Product {
+func (db *Database) GetProductSort(name string, sortType string, categories []string, maxPrice int, minPrice int) []Product {
 	products := make([]Product, 10)
-	//db.postgres.Raw("SELECT * FROM products WHERE category IN ?", []string{"دسته بندی پنج", "jinzhu 2"}).Scan(&products)
-	//db.postgres.Not(map[string]interface{}{"category": []string{"دسته بندی سه", "دسته بندی دو"}}).Find(&products)
-
+	arrayProducts := make([]Product, 0)
 	//fmt.Println(products)
-	result := db.postgres.Order(sortType).Where("price>? AND price<?", minPrice, maxPrice).Find(&products)
+	var result *gorm.DB
+	if len(name) == 0 {
+		result = db.postgres.Order(sortType).Where("price>? AND price<?", minPrice, maxPrice).Find(&products)
+	} else {
+		result = db.postgres.Order(sortType).Where("price>? AND price<? AND name like ?", minPrice, maxPrice, name).Find(&products)
+	}
+	for _, prods := range products {
+		for _, categs := range categories {
+			if prods.Category == categs {
+				arrayProducts = append(arrayProducts, prods)
+			}
+		}
+	}
 	if result.Error != nil {
 		panic(result.Error)
 	}
-	return products
+	return arrayProducts
 }
 
 // AddReceipt COMPLETE

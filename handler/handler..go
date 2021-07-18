@@ -4,13 +4,13 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"ie-project-back/model"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -39,20 +39,24 @@ func (handler *Handler) Init(db *model.Database) {
 	handler.echo.POST("/api/login", handler.handleLogin)
 	handler.echo.GET("/api/user", handler.handleGetUser)
 	handler.echo.POST("/api/logout", handler.handleLogout)
+	handler.echo.GET("/api/products", handler.handlerGetProducts)
 	err := handler.echo.Start("127.0.0.1:7000")
 	if err != nil {
 		return
 	}
 }
 
-
 func (handler *Handler) handlerGetProducts(context echo.Context) error {
 	log.Println(fmt.Sprintf("[Server]: requested for categories"))
 	sort := context.QueryParam("sort")
-	minPrice , _ := strconv.Atoi(context.QueryParam("minPrice"))
-	maxPrice , _:= strconv.Atoi(context.QueryParam("maxPrice"))
-
-	raw := handler.db.GetProductSort(sort,,maxPrice,minPrice)
+	name := context.QueryParam("name")
+	categories := context.QueryParams()["category"]
+	//p := context.QueryParams()["category"][0]
+	//fmt.Println(p)
+	//fmt.Println(categories)
+	minPrice, _ := strconv.Atoi(context.QueryParam("minPrice"))
+	maxPrice, _ := strconv.Atoi(context.QueryParam("maxPrice"))
+	raw := handler.db.GetProductSort(name, sort, categories, maxPrice, minPrice)
 	_json, err := json.Marshal(raw)
 	if err != nil {
 		log.Println(err)
