@@ -199,3 +199,12 @@ func (db *Database) BuyProduct(email string, name string, number int) string {
 	db.AddReceipt(name, number, email, users[0].Firstname, users[0].Lastname, users[0].Address, number*products[0].Price, formatedTime, formatedTime+email, "در حال انجام")
 	return "Done"
 }
+
+func (db *Database) GetUser(email string) *User {
+	var user User
+	db.postgres.Where("email = ?", email).First(&user)
+	if user.Email == "" {
+		return nil
+	}
+	return &user
+}

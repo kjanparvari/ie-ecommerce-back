@@ -21,6 +21,7 @@ func main() {
 	//db.GetProductSort("Price asc", trash, 290, 100)
 	//db.GetCategories()
 	//db.InsertUser("saeed.maroof@ymail.com", "12345678", "saeed", "maroof", 0, "tehran")
+	//fmt.Println(db.GetUser("kjanparvari@gmail.com"))
 	server := handler.Handler{}
 	server.Init(&db)
 }

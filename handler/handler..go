@@ -1,28 +1,43 @@
 package handler
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/labstack/echo/v4/middleware"
 	"ie-project-back/model"
 	"log"
 	"net/http"
+	"time"
 )
 
 type Handler struct {
-	echo *echo.Echo
-	db   *model.Database
+	echo      *echo.Echo
+	db        *model.Database
+	secretKey string
+}
+
+func HashFunc(str string) string {
+	data := []byte(str)
+	return fmt.Sprintf("%x", md5.Sum(data))
 }
 
 func (handler *Handler) Init(db *model.Database) {
 	handler.db = db
 	handler.echo = echo.New()
+	handler.secretKey = "secret-key"
+	handler.echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowCredentials: true,
+		//AllowOrigins: []string{"https://labstack.com", "https://labstack.net"},
+		//AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 	handler.echo.GET("/api/categories/all", handler.handleGetCategories)
 	handler.echo.POST("/api/signup", handler.handleSignup)
 	handler.echo.POST("/api/login", handler.handleLogin)
+	handler.echo.GET("/api/user", handler.handleGetUser)
+	handler.echo.POST("/api/logout", handler.handleLogout)
 	err := handler.echo.Start("127.0.0.1:7000")
 	if err != nil {
 		return
@@ -41,11 +56,7 @@ func (handler *Handler) handleGetCategories(context echo.Context) error {
 		return context.String(http.StatusOK, string(_json))
 	}
 }
-func NewSHA256(str string) string {
-	data := []byte(str)
-	hash := sha256.Sum256(data)
-	return string(hash[:])
-}
+
 func (handler *Handler) handleSignup(context echo.Context) error {
 	log.Println(fmt.Sprintf("[Server]: requested for signup"))
 	var json map[string]string = map[string]string{}
@@ -55,11 +66,10 @@ func (handler *Handler) handleSignup(context echo.Context) error {
 		return context.String(http.StatusBadRequest, "")
 	}
 	log.Println("[Server]: user info: ", json)
-	hashedBytes, _ := bcrypt.GenerateFromPassword([]byte(json["password"]), 14)
-	hashedStr := hex.EncodeToString(hashedBytes)
+	hashedStr := HashFunc(json["password"])
 	ok, msg := handler.db.InsertUser(json["email"], hashedStr, json["firstname"], json["lastname"], 0, json["address"])
 	if ok == -1 {
-		return context.String(http.StatusAccepted, msg)
+		return context.String(http.StatusBadRequest, msg)
 	}
 	return context.String(http.StatusOK, "you have been registered")
 }
@@ -67,17 +77,70 @@ func (handler *Handler) handleSignup(context echo.Context) error {
 func (handler *Handler) handleLogin(context echo.Context) error {
 	log.Println(fmt.Sprintf("[Server]: requested for login"))
 	var json map[string]string = map[string]string{}
-	err := context.Bind(&json)
-	if err != nil {
+
+	if err := context.Bind(&json); err != nil {
 		log.Println(err)
 		return context.String(http.StatusBadRequest, "")
 	}
 	log.Println("[Server]: user info: ", json)
-	hashedBytes, _ := bcrypt.GenerateFromPassword([]byte(json["password"]), 14)
-	hashedStr := hex.EncodeToString(hashedBytes)
-	ok, msg := handler.db.InsertUser(json["email"], hashedStr, json["firstname"], json["lastname"], 0, json["address"])
-	if ok == -1 {
-		return context.String(http.StatusAccepted, msg)
+	user := handler.db.GetUser(json["email"])
+	if user == nil {
+		log.Println("[Server]: user not found")
+		return context.String(http.StatusNotFound, "user not found")
 	}
-	return context.String(http.StatusOK, "you have been registered")
+	if user.Password != HashFunc(json["password"]) {
+		return context.String(http.StatusBadRequest, "incorrect password")
+	}
+	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Issuer:    user.Email,
+		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), // 1 day
+	})
+	if token, err := claims.SignedString([]byte(handler.secretKey)); err != nil {
+		log.Println(err)
+		return context.String(http.StatusInternalServerError, "could not login")
+	} else {
+		log.Println("[Server]: user ", json["email"], " logged in")
+		cookie := new(http.Cookie)
+		cookie.Name = "jwt"
+		cookie.Value = token
+		cookie.Expires = time.Now().Add(24 * time.Hour) // 1 day
+		cookie.HttpOnly = true
+		context.SetCookie(cookie)
+		return context.String(http.StatusOK, "logged in!")
+	}
+}
+func (handler *Handler) authenticate(context echo.Context) (bool, *jwt.Token) {
+	cookie, err1 := context.Cookie("jwt")
+	if err1 != nil {
+		log.Println(err1)
+		return false, nil
+	}
+	token, err := jwt.ParseWithClaims(cookie.Value, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(handler.secretKey), nil
+	})
+	if err != nil {
+		return false, nil
+	}
+	return true, token
+}
+func (handler *Handler) handleGetUser(context echo.Context) error {
+	isAuth, token := handler.authenticate(context)
+	if !isAuth {
+		return context.String(http.StatusUnauthorized, "unauthenticated")
+	}
+
+	claims := token.Claims.(*jwt.StandardClaims)
+	user := handler.db.GetUser(claims.Issuer)
+
+	return context.JSON(http.StatusOK, *user)
+}
+
+func (handler *Handler) handleLogout(context echo.Context) error {
+	cookie := new(http.Cookie)
+	cookie.Name = "jwt"
+	cookie.Value = ""
+	cookie.Expires = time.Now().Add(-time.Hour)
+	cookie.HttpOnly = true
+	context.SetCookie(cookie)
+	return context.String(http.StatusOK, "logged out")
 }
