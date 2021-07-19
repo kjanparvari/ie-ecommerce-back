@@ -5,15 +5,15 @@ import "image"
 type User struct {
 	Address   string `json:"address"`
 	Email     string `json:"email"`
-	Password  string `json:"_"`
+	Password  string `json:"-"`
 	Firstname string `json:"firstname"`
 	Lastname  string `json:"lastname"`
 	Balance   int    `json:"balance"`
 }
 
 type Admin struct {
-	Email    string
-	Password string
+	Email    string `json:"email"`
+	Password string `json:"-"`
 }
 
 type Product struct {

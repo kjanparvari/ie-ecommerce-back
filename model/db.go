@@ -222,3 +222,12 @@ func (db *Database) GetUser(email string) *User {
 	}
 	return &user
 }
+
+func (db *Database) GetAdmin(email string) *Admin {
+	var admin Admin
+	db.postgres.Where("email = ?", email).First(&admin)
+	if admin.Email == "" {
+		return nil
+	}
+	return &admin
+}

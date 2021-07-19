@@ -123,16 +123,27 @@ func (handler *Handler) handleLogin(context echo.Context) error {
 		return context.String(http.StatusBadRequest, "")
 	}
 	log.Println("[Server]: user info: ", _json)
-	user := handler.db.GetUser(_json["email"])
-	if user == nil {
-		log.Println("[Server]: user not found")
-		return context.String(http.StatusNotFound, "user not found")
+
+	var _pass string
+	var _email string
+	if admin := handler.db.GetAdmin(_json["email"]); admin != nil {
+		_email = admin.Email
+		_pass = admin.Password
+	} else {
+		user := handler.db.GetUser(_json["email"])
+		if user == nil {
+			log.Println("[Server]: user not found")
+			return context.String(http.StatusNotFound, "user not found")
+		}
+		_email = user.Email
+		_pass = user.Password
 	}
-	if user.Password != HashFunc(_json["password"]) {
+
+	if _pass != HashFunc(_json["password"]) {
 		return context.String(http.StatusBadRequest, "incorrect password")
 	}
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-		Issuer:    user.Email,
+		Issuer:    _email,
 		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), // 1 day
 	})
 	if token, err := claims.SignedString([]byte(handler.secretKey)); err != nil {
@@ -149,6 +160,7 @@ func (handler *Handler) handleLogin(context echo.Context) error {
 		return context.String(http.StatusOK, "logged in!")
 	}
 }
+
 func (handler *Handler) authenticate(context echo.Context) (bool, *jwt.Token) {
 	cookie, err1 := context.Cookie("jwt")
 	if err1 != nil {
@@ -170,9 +182,15 @@ func (handler *Handler) handleGetUser(context echo.Context) error {
 	}
 
 	claims := token.Claims.(*jwt.StandardClaims)
-	user := handler.db.GetUser(claims.Issuer)
 
-	return context.JSON(http.StatusOK, *user)
+	if user := handler.db.GetUser(claims.Issuer); user != nil {
+		return context.JSON(http.StatusOK, *user)
+	} else if admin := handler.db.GetAdmin(claims.Issuer); admin != nil {
+		return context.JSON(http.StatusOK, *admin)
+	} else {
+		return context.String(http.StatusInternalServerError, "")
+	}
+
 }
 
 func (handler *Handler) handleLogout(context echo.Context) error {
