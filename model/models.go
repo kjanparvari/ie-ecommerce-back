@@ -3,12 +3,12 @@ package model
 import "image"
 
 type User struct {
-	Address   string
-	Email     string
-	Password  string
-	Firstname string
-	Lastname  string
-	Balance   int
+	Address   string `json:"address"`
+	Email     string `json:"email"`
+	Password  string `json:"_"`
+	Firstname string `json:"firstname"`
+	Lastname  string `json:"lastname"`
+	Balance   int    `json:"balance"`
 }
 
 type Admin struct {

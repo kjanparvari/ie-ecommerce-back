@@ -82,36 +82,53 @@ func (handler *Handler) handleGetCategories(context echo.Context) error {
 
 func (handler *Handler) handleSignup(context echo.Context) error {
 	log.Println(fmt.Sprintf("[Server]: requested for signup"))
-	var json map[string]string = map[string]string{}
-	err := context.Bind(&json)
+	var _json map[string]string = map[string]string{}
+	err := context.Bind(&_json)
 	if err != nil {
 		log.Println(err)
 		return context.String(http.StatusBadRequest, "")
 	}
-	log.Println("[Server]: user info: ", json)
-	hashedStr := HashFunc(json["password"])
-	ok, msg := handler.db.InsertUser(json["email"], hashedStr, json["firstname"], json["lastname"], 0, json["address"])
+	log.Println("[Server]: user info: ", _json)
+	hashedStr := HashFunc(_json["password"])
+	ok, msg := handler.db.InsertUser(_json["email"], hashedStr, _json["firstname"], _json["lastname"], 0, _json["address"])
 	if ok == -1 {
 		return context.String(http.StatusBadRequest, msg)
 	}
-	return context.String(http.StatusOK, "you have been registered")
+
+	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Issuer:    _json["email"],
+		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), // 1 day
+	})
+	if token, err := claims.SignedString([]byte(handler.secretKey)); err != nil {
+		log.Println(err)
+		return context.String(http.StatusInternalServerError, "could not login")
+	} else {
+		log.Println("[Server]: user ", _json["email"], " logged in")
+		cookie := new(http.Cookie)
+		cookie.Name = "jwt"
+		cookie.Value = token
+		cookie.Expires = time.Now().Add(24 * time.Hour) // 1 day
+		cookie.HttpOnly = true
+		context.SetCookie(cookie)
+		return context.String(http.StatusOK, "you have been registered\"")
+	}
 }
 
 func (handler *Handler) handleLogin(context echo.Context) error {
 	log.Println(fmt.Sprintf("[Server]: requested for login"))
-	var json map[string]string = map[string]string{}
+	var _json map[string]string = map[string]string{}
 
-	if err := context.Bind(&json); err != nil {
+	if err := context.Bind(&_json); err != nil {
 		log.Println(err)
 		return context.String(http.StatusBadRequest, "")
 	}
-	log.Println("[Server]: user info: ", json)
-	user := handler.db.GetUser(json["email"])
+	log.Println("[Server]: user info: ", _json)
+	user := handler.db.GetUser(_json["email"])
 	if user == nil {
 		log.Println("[Server]: user not found")
 		return context.String(http.StatusNotFound, "user not found")
 	}
-	if user.Password != HashFunc(json["password"]) {
+	if user.Password != HashFunc(_json["password"]) {
 		return context.String(http.StatusBadRequest, "incorrect password")
 	}
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
@@ -122,7 +139,7 @@ func (handler *Handler) handleLogin(context echo.Context) error {
 		log.Println(err)
 		return context.String(http.StatusInternalServerError, "could not login")
 	} else {
-		log.Println("[Server]: user ", json["email"], " logged in")
+		log.Println("[Server]: user ", _json["email"], " logged in")
 		cookie := new(http.Cookie)
 		cookie.Name = "jwt"
 		cookie.Value = token
