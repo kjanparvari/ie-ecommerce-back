@@ -42,7 +42,7 @@ func (handler *Handler) Init(db *model.Database) {
 	handler.echo.POST("/api/logout", handler.handleLogout)
 	handler.echo.GET("/api/products", handler.handlerGetProducts)
 	handler.echo.POST("/api/user/modify", handler.handlerModifyUser)
-	handler.echo.POST("/api/products/add", handler.handlerAddProduct)
+	handler.echo.POST("/api/admin/products/add", handler.handlerAddProduct)
 
 	err := handler.echo.Start("127.0.0.1:7000")
 	if err != nil {
