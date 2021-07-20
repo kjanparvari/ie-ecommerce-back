@@ -40,20 +40,30 @@ func (handler *Handler) Init(db *model.Database) {
 	handler.echo.GET("/api/user", handler.handleGetUser)
 	handler.echo.POST("/api/logout", handler.handleLogout)
 	handler.echo.GET("/api/products", handler.handlerGetProducts)
+	handler.echo.POST("/api/user/modify", handler.handlerModifyUser)
+
 	err := handler.echo.Start("127.0.0.1:7000")
 	if err != nil {
 		return
 	}
 }
 
+func (handler *Handler) handlerModifyUser(context echo.Context) error {
+	address := context.QueryParam("address")
+	email := context.QueryParam("email")
+	password := context.QueryParam("password")
+	firstName := context.QueryParam("firstName")
+	lastName := context.QueryParam("lastName")
+	balance, _ := strconv.Atoi(context.QueryParam("balance"))
+	handler.db.ModifyUser(email, address, password, firstName, lastName, balance)
+	return context.String(http.StatusOK, "OK")
+
+}
 func (handler *Handler) handlerGetProducts(context echo.Context) error {
 	log.Println(fmt.Sprintf("[Server]: requested for Products"))
 	sort := context.QueryParam("sort")
 	name := context.QueryParam("name")
 	categories := context.QueryParams()["category"]
-	//p := context.QueryParams()["category"][0]
-	//fmt.Println(p)
-	//fmt.Println(categories)
 	minPrice, _ := strconv.Atoi(context.QueryParam("minPrice"))
 	maxPrice, _ := strconv.Atoi(context.QueryParam("maxPrice"))
 	raw := handler.db.GetProductSort(name, sort, categories, maxPrice, minPrice)
