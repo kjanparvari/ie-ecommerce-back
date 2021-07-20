@@ -49,10 +49,34 @@ func (handler *Handler) Init(db *model.Database) {
 	handler.echo.POST("/api/categories/delete", handler.handlerDeleteCategory)
 	handler.echo.POST("/api/user/risePrice", handler.handlerRisePrice)
 	handler.echo.POST("/api/admin/products/add", handler.handlerAddProduct)
-
+	handler.echo.GET("/api/admin/receipt", handler.handlerGetReceiptAdmin)
+	handler.echo.GET("/api/receipt", handler.handlerGetReceiptUser)
 	err := handler.echo.Start("127.0.0.1:7000")
 	if err != nil {
 		return
+	}
+}
+func (handler *Handler) handlerGetReceiptUser(context echo.Context) error {
+	email := context.QueryParam("email")
+	raw := handler.db.GetReceipt(email)
+	_json, err := json.Marshal(raw)
+	if err != nil {
+		log.Println(err)
+		return context.String(http.StatusServiceUnavailable, "")
+	} else {
+		log.Println(fmt.Sprintf("[Server]: receipts: %s", string(_json)))
+		return context.String(http.StatusOK, string(_json))
+	}
+}
+func (handler *Handler) handlerGetReceiptAdmin(context echo.Context) error {
+	raw := handler.db.GetReceipt("")
+	_json, err := json.Marshal(raw)
+	if err != nil {
+		log.Println(err)
+		return context.String(http.StatusServiceUnavailable, "")
+	} else {
+		log.Println(fmt.Sprintf("[Server]: receipts: %s", string(_json)))
+		return context.String(http.StatusOK, string(_json))
 	}
 }
 func (handler *Handler) handlerRisePrice(context echo.Context) error {
@@ -107,7 +131,10 @@ func (handler *Handler) handlerAddProduct(context echo.Context) error {
 func (handler *Handler) handlerModifyCategory(context echo.Context) error {
 	newName := context.QueryParam("newName")
 	oldName := context.QueryParam("oldName")
-	handler.db.ModifyCategory(newName, oldName)
+	correctness := handler.db.ModifyCategory(newName, oldName)
+	if correctness == 0 {
+		return context.String(http.StatusOK, "Can not Modify Name")
+	}
 	return context.String(http.StatusOK, "OK")
 }
 
@@ -118,7 +145,7 @@ func (handler *Handler) handlerModifyUser(context echo.Context) error {
 	firstName := context.QueryParam("firstName")
 	lastName := context.QueryParam("lastName")
 	balance, _ := strconv.Atoi(context.QueryParam("balance"))
-	handler.db.ModifyUser(email, address, password, firstName, lastName, balance)
+	handler.db.ModifyUser(email, address, HashFunc(password), firstName, lastName, balance)
 	return context.String(http.StatusOK, "OK")
 }
 func (handler *Handler) handlerGetProducts(context echo.Context) error {
