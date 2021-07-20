@@ -56,12 +56,12 @@ func (db *Database) AddProduct(name string, category string, price int, stock in
 }
 
 // InsertCategory COMPLETE
-func (db *Database) InsertCategory(categoryName string) {
+func (db *Database) AddCategory(categoryName string) int {
 	categories := make([]Category, 10)
 	db.postgres.Find(&categories, "Name =?", categoryName)
 	if (len(categories)) > 0 {
 		print("there is another category with same name")
-		return
+		return 0
 	}
 	categories = []Category{
 		{Name: categoryName},
@@ -69,6 +69,7 @@ func (db *Database) InsertCategory(categoryName string) {
 	for _, categs := range categories {
 		db.postgres.Create(&categs)
 	}
+	return 1
 }
 
 // RiseBalance COMPLETE
@@ -189,7 +190,7 @@ func (db *Database) seeClientReceipt(email string) []Receipt {
 	return receipts
 }
 
-func (db *Database) InsertUser(email string, password string, firstname string, lastname string, balance int, Address string) (int, string) {
+func (db *Database) AddUser(email string, password string, firstname string, lastname string, balance int, Address string) (int, string) {
 	log.Println("[Database]: request to add user: ", email)
 	users := make([]User, 10)
 	db.postgres.Find(&users, "Email =?", email)

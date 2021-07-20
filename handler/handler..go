@@ -43,12 +43,29 @@ func (handler *Handler) Init(db *model.Database) {
 	handler.echo.GET("/api/products", handler.handlerGetProducts)
 	handler.echo.POST("/api/user/modify", handler.handlerModifyUser)
 	handler.echo.POST("/api/products/add", handler.handlerAddProduct)
+	handler.echo.POST("/api/categories/modify", handler.handlerModifyCategory)
+	handler.echo.POST("/api/categories/add", handler.handlerAddCategory)
+	handler.echo.POST("/api/categories/delete", handler.handlerDeleteCategory)
 
 	err := handler.echo.Start("127.0.0.1:7000")
 	if err != nil {
 		return
 	}
 }
+func (handler *Handler) handlerDeleteCategory(context echo.Context) error {
+	name := context.QueryParam("name")
+	handler.db.DeleteCategory(name)
+	return context.String(http.StatusOK, "OK")
+}
+func (handler *Handler) handlerAddCategory(context echo.Context) error {
+	name := context.QueryParam("name")
+	correctness := handler.db.AddCategory(name)
+	if correctness == 0 {
+		return context.String(http.StatusOK, "Can Not Add Category")
+	}
+	return context.String(http.StatusOK, "OK")
+}
+
 func (handler *Handler) handlerAddProduct(context echo.Context) error {
 	name := context.QueryParam("name")
 	category := context.QueryParam("category")
@@ -64,6 +81,14 @@ func (handler *Handler) handlerAddProduct(context echo.Context) error {
 	return context.String(http.StatusOK, returnString)
 
 }
+
+func (handler *Handler) handlerModifyCategory(context echo.Context) error {
+	newName := context.QueryParam("newName")
+	oldName := context.QueryParam("oldName")
+	handler.db.ModifyCategory(newName, oldName)
+	return context.String(http.StatusOK, "OK")
+}
+
 func (handler *Handler) handlerModifyUser(context echo.Context) error {
 	address := context.QueryParam("address")
 	email := context.QueryParam("email")
@@ -73,7 +98,6 @@ func (handler *Handler) handlerModifyUser(context echo.Context) error {
 	balance, _ := strconv.Atoi(context.QueryParam("balance"))
 	handler.db.ModifyUser(email, address, password, firstName, lastName, balance)
 	return context.String(http.StatusOK, "OK")
-
 }
 func (handler *Handler) handlerGetProducts(context echo.Context) error {
 	log.Println(fmt.Sprintf("[Server]: requested for Products"))
@@ -116,7 +140,7 @@ func (handler *Handler) handleSignup(context echo.Context) error {
 	}
 	log.Println("[Server]: user info: ", _json)
 	hashedStr := HashFunc(_json["password"])
-	ok, msg := handler.db.InsertUser(_json["email"], hashedStr, _json["firstname"], _json["lastname"], 0, _json["address"])
+	ok, msg := handler.db.AddUser(_json["email"], hashedStr, _json["firstname"], _json["lastname"], 0, _json["address"])
 	if ok == -1 {
 		return context.String(http.StatusBadRequest, msg)
 	}
