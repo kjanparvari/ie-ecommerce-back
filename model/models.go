@@ -17,11 +17,11 @@ type Admin struct {
 }
 
 type Product struct {
-	Name       string
-	Category   string
-	Price      int
-	Stock      int
-	SoldNumber int
+	Name       string `json:"name"`
+	Category   string `json:"category"`
+	Price      int    `json:"price"`
+	Stock      int    `json:"stock"`
+	SoldNumber int    `json:"sold_number"`
 	image      image.Image
 }
 

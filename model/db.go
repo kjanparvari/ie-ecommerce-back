@@ -141,12 +141,19 @@ func (db *Database) GetProductSort(name string, sortType string, categories []st
 	var result *gorm.DB
 	fmt.Println(sortType)
 	fmt.Println(categories)
+	fmt.Println(len(categories))
 	fmt.Println(maxPrice)
 	fmt.Println(minPrice)
 	if len(name) == 0 {
 		result = db.postgres.Order(sortType).Where("price>? AND price<?", minPrice, maxPrice).Find(&products)
 	} else {
 		result = db.postgres.Order(sortType).Where("price>? AND price<? AND name like ?", minPrice, maxPrice, name).Find(&products)
+	}
+	if result.Error != nil {
+		panic(result.Error)
+	}
+	if len(categories) == 0 {
+		return products
 	}
 	for _, prods := range products {
 		for _, categs := range categories {
@@ -155,9 +162,7 @@ func (db *Database) GetProductSort(name string, sortType string, categories []st
 			}
 		}
 	}
-	if result.Error != nil {
-		panic(result.Error)
-	}
+
 	return arrayProducts
 }
 
