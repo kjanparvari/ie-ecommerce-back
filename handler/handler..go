@@ -41,16 +41,38 @@ func (handler *Handler) Init(db *model.Database) {
 	handler.echo.GET("/api/admin", handler.handleGetAdmin)
 	handler.echo.POST("/api/logout", handler.handleLogout)
 	handler.echo.GET("/api/products", handler.handlerGetProducts)
+	handler.echo.POST("/api/products/modify", handler.handlerModifyProduct)
+	handler.echo.POST("/api/products/delete", handler.handlerDeleteProduct)
 	handler.echo.POST("/api/user/modify", handler.handlerModifyUser)
 	handler.echo.POST("/api/categories/modify", handler.handlerModifyCategory)
 	handler.echo.POST("/api/categories/add", handler.handlerAddCategory)
 	handler.echo.POST("/api/categories/delete", handler.handlerDeleteCategory)
+	handler.echo.POST("/api/user/risePrice", handler.handlerRisePrice)
 	handler.echo.POST("/api/admin/products/add", handler.handlerAddProduct)
 
 	err := handler.echo.Start("127.0.0.1:7000")
 	if err != nil {
 		return
 	}
+}
+func (handler *Handler) handlerRisePrice(context echo.Context) error {
+	email := context.QueryParam("email")
+	amount, _ := strconv.Atoi(context.QueryParam("amount"))
+	handler.db.RiseBalance(email, amount)
+	return context.String(http.StatusOK, "OK")
+}
+func (handler *Handler) handlerModifyProduct(context echo.Context) error {
+	name := context.QueryParam("name")
+	category := context.QueryParam("category")
+	price, _ := strconv.Atoi(context.QueryParam("price"))
+	stock, _ := strconv.Atoi(context.QueryParam("stock"))
+	handler.db.ModifyProduct(name, category, price, stock)
+	return context.String(http.StatusOK, "OK")
+}
+func (handler *Handler) handlerDeleteProduct(context echo.Context) error {
+	name := context.QueryParam("name")
+	handler.db.DeleteProduct(name)
+	return context.String(http.StatusOK, "OK")
 }
 func (handler *Handler) handlerDeleteCategory(context echo.Context) error {
 	name := context.QueryParam("name")
