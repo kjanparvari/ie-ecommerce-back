@@ -248,7 +248,7 @@ func (db *Database) BuyProduct(email string, name string, number int) string {
 	if users[0].Balance < number*products[0].Price {
 		return "Not Enough Money"
 	}
-	db.postgres.Model(Product{}).Where("name = ?", name).Updates(Product{Stock: products[0].Stock - number})
+	db.postgres.Model(Product{}).Where("name = ?", name).Updates(Product{Stock: products[0].Stock - number, SoldNumber: products[0].SoldNumber + number})
 	db.postgres.Model(User{}).Where("email = ?", email).Updates(User{Balance: users[0].Balance - number*products[0].Price})
 	// Using time.Now() function.
 	dt := time.Now()

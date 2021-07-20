@@ -51,10 +51,18 @@ func (handler *Handler) Init(db *model.Database) {
 	handler.echo.POST("/api/admin/products/add", handler.handlerAddProduct)
 	handler.echo.GET("/api/admin/receipt", handler.handlerGetReceiptAdmin)
 	handler.echo.GET("/api/receipt", handler.handlerGetReceiptUser)
+	handler.echo.GET("/api/buy", handler.handlerBuy)
 	err := handler.echo.Start("127.0.0.1:7000")
 	if err != nil {
 		return
 	}
+}
+func (handler *Handler) handlerBuy(context echo.Context) error {
+	email := context.QueryParam("email")
+	name := context.QueryParam("name")
+	number, _ := strconv.Atoi(context.QueryParam("number"))
+	result := handler.db.BuyProduct(email, name, number)
+	return context.String(http.StatusServiceUnavailable, result)
 }
 func (handler *Handler) handlerGetReceiptUser(context echo.Context) error {
 	email := context.QueryParam("email")
