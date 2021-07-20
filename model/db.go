@@ -75,6 +75,16 @@ func (db *Database) AddCategory(categoryName string) int {
 	return 1
 }
 
+func (db *Database) GetReceipt(email string) []Receipt {
+	receipts := make([]Receipt, 10)
+	if len(email) == 0 {
+		db.postgres.Find(&receipts)
+	} else {
+		db.postgres.Where("customerEmail = ?", email).Find(&receipts)
+	}
+	return receipts
+}
+
 // RiseBalance COMPLETE
 func (db *Database) RiseBalance(email string, amount int) {
 	users := make([]User, 20)
@@ -83,9 +93,15 @@ func (db *Database) RiseBalance(email string, amount int) {
 }
 
 // ModifyCategory COMPLETE
-func (db *Database) ModifyCategory(newName string, oldName string) {
-	db.postgres.Model(Category{}).Where("name = ?", oldName).Updates(Category{Name: newName})
+func (db *Database) ModifyCategory(newName string, oldName string) int {
+	categories := make([]Category, 20)
+	db.postgres.Where("name = ?", newName).Find(&categories)
+	if len(categories) > 0 {
+		return 0
+	}
+	db.postgres.Model(Category{}).Where("name = ?", newName).Updates(Category{Name: newName})
 	db.postgres.Model(Product{}).Where("category = ?", oldName).Updates(Product{Category: newName})
+	return 1
 }
 
 // ExistCategory COMPLETE
