@@ -47,12 +47,19 @@ func (handler *Handler) Init(db *model.Database) {
 	handler.echo.POST("/api/categories/modify", handler.handlerModifyCategory)
 	handler.echo.POST("/api/categories/add", handler.handlerAddCategory)
 	handler.echo.POST("/api/categories/delete", handler.handlerDeleteCategory)
+	handler.echo.POST("/api/user/risePrice", handler.handlerRisePrice)
 	handler.echo.POST("/api/admin/products/add", handler.handlerAddProduct)
 
 	err := handler.echo.Start("127.0.0.1:7000")
 	if err != nil {
 		return
 	}
+}
+func (handler *Handler) handlerRisePrice(context echo.Context) error {
+	email := context.QueryParam("email")
+	amount, _ := strconv.Atoi(context.QueryParam("amount"))
+	handler.db.RiseBalance(email, amount)
+	return context.String(http.StatusOK, "OK")
 }
 func (handler *Handler) handlerModifyProduct(context echo.Context) error {
 	name := context.QueryParam("name")
