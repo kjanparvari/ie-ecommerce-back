@@ -38,6 +38,7 @@ func (handler *Handler) Init(db *model.Database) {
 	handler.echo.POST("/api/signup", handler.handleSignup)
 	handler.echo.POST("/api/login", handler.handleLogin)
 	handler.echo.GET("/api/user", handler.handleGetUser)
+	handler.echo.GET("/api/admin", handler.handleGetAdmin)
 	handler.echo.POST("/api/logout", handler.handleLogout)
 	handler.echo.GET("/api/products", handler.handlerGetProducts)
 	handler.echo.POST("/api/user/modify", handler.handlerModifyUser)
@@ -217,7 +218,21 @@ func (handler *Handler) handleGetUser(context echo.Context) error {
 	}
 
 }
+func (handler *Handler) handleGetAdmin(context echo.Context) error {
+	isAuth, token := handler.authenticate(context)
+	if !isAuth {
+		return context.String(http.StatusUnauthorized, "unauthenticated")
+	}
 
+	claims := token.Claims.(*jwt.StandardClaims)
+
+	if admin := handler.db.GetAdmin(claims.Issuer); admin != nil {
+		return context.JSON(http.StatusOK, *admin)
+	} else {
+		return context.String(http.StatusInternalServerError, "")
+	}
+
+}
 func (handler *Handler) handleLogout(context echo.Context) error {
 	cookie := new(http.Cookie)
 	cookie.Name = "jwt"
