@@ -38,6 +38,9 @@ func (db *Database) createTables() {
 func (db *Database) tmp() {
 	db.postgres.Exec("")
 }
+func (db *Database) ModifyProduct(name string, category string, price int, stock int) {
+	db.postgres.Model(Product{}).Where("name = ?", name).Updates(Product{Category: category, Price: price, Stock: stock})
+}
 
 // InsertCategory COMPLETE
 func (db *Database) AddProduct(name string, category string, price int, stock int, soldNumber int) {
@@ -148,6 +151,9 @@ func (db *Database) GetProductSort(name string, sortType string, categories []st
 	} else {
 		result = db.postgres.Order(sortType).Where("price>? AND price<? AND name like ?", minPrice, maxPrice, name).Find(&products)
 	}
+	if len(categories) == 0 {
+		return products
+	}
 	for _, prods := range products {
 		for _, categs := range categories {
 			if prods.Category == categs {
@@ -164,6 +170,11 @@ func (db *Database) GetProductSort(name string, sortType string, categories []st
 // ModifyUser COMPLETE
 func (db *Database) ModifyUser(email string, address string, password string, firstName string, lastName string, balance int) {
 	db.postgres.Model(User{}).Where("email = ?", email).Updates(User{Address: address, Password: password, Firstname: firstName, Lastname: lastName, Balance: balance})
+}
+
+// DeleteProduct COMPLETE
+func (db *Database) DeleteProduct(name string) {
+	db.postgres.Where("name = ?", name).Delete(&Product{})
 }
 
 // AddReceipt COMPLETE
