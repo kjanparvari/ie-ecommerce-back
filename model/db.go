@@ -150,6 +150,11 @@ func (db *Database) GetProductSort(name string, sortType string, categories []st
 	return arrayProducts
 }
 
+// ModifyUser COMPLETE
+func (db *Database) ModifyUser(email string, address string, password string, firstName string, lastName string, balance int) {
+	db.postgres.Model(User{}).Where("email = ?", email).Updates(User{Address: address, Password: password, Firstname: firstName, Lastname: lastName, Balance: balance})
+}
+
 // AddReceipt COMPLETE
 func (db *Database) AddReceipt(productName string, soldNumber int, customerEmail string, customerFirstname string, customerLastname string, customerAddress string, amount int, date string, tracingCode string, status string) {
 	receipts := []Receipt{
