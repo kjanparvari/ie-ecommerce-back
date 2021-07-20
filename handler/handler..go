@@ -41,13 +41,28 @@ func (handler *Handler) Init(db *model.Database) {
 	handler.echo.POST("/api/logout", handler.handleLogout)
 	handler.echo.GET("/api/products", handler.handlerGetProducts)
 	handler.echo.POST("/api/user/modify", handler.handlerModifyUser)
+	handler.echo.POST("/api/products/add", handler.handlerAddProduct)
 
 	err := handler.echo.Start("127.0.0.1:7000")
 	if err != nil {
 		return
 	}
 }
+func (handler *Handler) handlerAddProduct(context echo.Context) error {
+	name := context.QueryParam("name")
+	category := context.QueryParam("category")
+	price, _ := strconv.Atoi(context.QueryParam("price"))
+	stock, _ := strconv.Atoi(context.QueryParam("stock"))
+	exist := handler.db.ExistCategory(category)
+	returnString := "OK"
+	if exist == 0 {
+		category = "دسته بندی نشده"
+		returnString = "Category Changes"
+	}
+	handler.db.AddProduct(name, category, price, stock, 0)
+	return context.String(http.StatusOK, returnString)
 
+}
 func (handler *Handler) handlerModifyUser(context echo.Context) error {
 	address := context.QueryParam("address")
 	email := context.QueryParam("email")

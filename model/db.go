@@ -40,7 +40,7 @@ func (db *Database) tmp() {
 }
 
 // InsertCategory COMPLETE
-func (db *Database) InsertProduct(name string, category string, price int, stock int, soldNumber int) {
+func (db *Database) AddProduct(name string, category string, price int, stock int, soldNumber int) {
 	products := make([]Product, 10)
 	db.postgres.Find(&products, "Name =?", name)
 	if (len(products)) > 0 {
@@ -82,6 +82,16 @@ func (db *Database) RiseBalance(email string, amount int) {
 func (db *Database) ModifyCategory(newName string, oldName string) {
 	db.postgres.Model(Category{}).Where("name = ?", oldName).Updates(Category{Name: newName})
 	db.postgres.Model(Product{}).Where("category = ?", oldName).Updates(Product{Category: newName})
+}
+
+// ExistCategory COMPLETE
+func (db *Database) ExistCategory(name string) int {
+	categories := make([]Category, 20)
+	db.postgres.Where("name = ?", name).Find(&categories)
+	if len(categories) == 0 {
+		return 0
+	}
+	return 1
 }
 
 // GetCategories COMPLETE
