@@ -47,7 +47,7 @@ func (handler *Handler) Init(db *model.Database) {
 	handler.echo.POST("/api/admin/categories/modify", handler.handlerModifyCategory)
 	handler.echo.POST("/api/admin/categories/add", handler.handlerAddCategory)
 	handler.echo.POST("/api/admin/categories/delete", handler.handlerDeleteCategory)
-	handler.echo.POST("/api/user/risePrice", handler.handlerRisePrice)
+	handler.echo.POST("/api/user/riseBalance", handler.handlerRiseBalance)
 	handler.echo.POST("/api/admin/products/add", handler.handlerAddProduct)
 	handler.echo.GET("/api/admin/receipt", handler.handlerGetReceiptAdmin)
 	handler.echo.GET("/api/receipt", handler.handlerGetReceiptUser)
@@ -80,14 +80,23 @@ func (handler *Handler) handlerChangeStatus(context echo.Context) error {
 	return context.String(http.StatusOK, "OK")
 }
 func (handler *Handler) handlerBuy(context echo.Context) error {
-	email := context.QueryParam("email")
+	isAuth, token := handler.authenticate(context)
+	if !isAuth {
+		return context.String(http.StatusUnauthorized, "unauthorized")
+	}
+	email := token.Claims.(*jwt.StandardClaims).Issuer
 	name := context.QueryParam("name")
 	number, _ := strconv.Atoi(context.QueryParam("number"))
 	result := handler.db.BuyProduct(email, name, number)
+	log.Println(fmt.Sprintf("[Server]: requested to buy %d %s from %s. result: %s", number, name, email, result))
 	return context.String(http.StatusOK, result)
 }
 func (handler *Handler) handlerGetReceiptUser(context echo.Context) error {
-	email := context.QueryParam("email")
+	isAuth, token := handler.authenticate(context)
+	if !isAuth {
+		return context.String(http.StatusUnauthorized, "unauthorized")
+	}
+	email := token.Claims.(*jwt.StandardClaims).Issuer
 	raw := handler.db.GetReceipt(email)
 	_json, err := json.Marshal(raw)
 	if err != nil {
@@ -112,11 +121,15 @@ func (handler *Handler) handlerGetReceiptAdmin(context echo.Context) error {
 		return context.String(http.StatusOK, string(_json))
 	}
 }
-func (handler *Handler) handlerRisePrice(context echo.Context) error {
-	email := context.QueryParam("email")
+func (handler *Handler) handlerRiseBalance(context echo.Context) error {
+	isAuth, token := handler.authenticate(context)
+	if !isAuth {
+		return context.String(http.StatusUnauthorized, "unauthorized")
+	}
+	email := token.Claims.(*jwt.StandardClaims).Issuer
 	amount, _ := strconv.Atoi(context.QueryParam("amount"))
 	handler.db.RiseBalance(email, amount)
-	return context.String(http.StatusOK, "OK")
+	return context.String(http.StatusOK, "موجودی اضافه شد.")
 }
 func (handler *Handler) handlerModifyProduct(context echo.Context) error {
 	if !handler.checkAdminPrivilege(context) {
@@ -192,11 +205,15 @@ func (handler *Handler) handlerModifyCategory(context echo.Context) error {
 }
 
 func (handler *Handler) handlerModifyUser(context echo.Context) error {
+	isAuth, token := handler.authenticate(context)
+	if !isAuth {
+		return context.String(http.StatusUnauthorized, "unauthorized")
+	}
+	email := token.Claims.(*jwt.StandardClaims).Issuer
 	address := context.QueryParam("address")
-	email := context.QueryParam("email")
 	password := context.QueryParam("password")
-	firstName := context.QueryParam("firstName")
-	lastName := context.QueryParam("lastName")
+	firstName := context.QueryParam("firstname")
+	lastName := context.QueryParam("lastname")
 	balance, _ := strconv.Atoi(context.QueryParam("balance"))
 	handler.db.ModifyUser(email, address, HashFunc(password), firstName, lastName, balance)
 	return context.String(http.StatusOK, "OK")

@@ -13,6 +13,8 @@ func main() {
 	//db.AddReceipt("محصول دو", 1, "kjanparvari@gmail.com", "کامیار", "جان پروری", "تهران", 3, "2021-01-12", "testCode3", "درحال انجام")
 	//db.AddReceipt("محصول سه", 1, "kjanparvari@gmail.com", "کامیار", "جان پروری", "تهران", 3, "2021-01-12", "testCode4", "درحال انجام")
 	//db.AddReceipt("محصول چهار", 6, "kjanparvari@gmail.com", "کامیار", "جان پروری", "تهران", 3, "2021-01-12", "testCode5", "درحال انجام")
+	//fmt.Println(handler.HashFunc("kj12345678"))
+	//db.AddUser("c@c.co", "7afcd74c08ff96179aa4be2c4d2cc41f","کامیار","جان پروری", 500, "تهران")
 	server := handler.Handler{}
 	server.Init(&db)
 }
