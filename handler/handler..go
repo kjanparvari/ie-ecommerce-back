@@ -10,6 +10,7 @@ import (
 	"ie-project-back/model"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 )
@@ -258,6 +259,10 @@ func (handler *Handler) handleSignup(context echo.Context) error {
 		return context.String(http.StatusBadRequest, "")
 	}
 	log.Println("[Server]: user info: ", _json)
+	_ok, _msg := handler.signupVerification(_json["email"], _json["password"], _json["firstname"], _json["lastname"], _json["address"])
+	if !_ok {
+		return context.String(http.StatusBadRequest, _msg)
+	}
 	hashedStr := HashFunc(_json["password"])
 	ok, msg := handler.db.AddUser(_json["email"], hashedStr, _json["firstname"], _json["lastname"], 0, _json["address"])
 	if ok == -1 {
@@ -384,4 +389,45 @@ func (handler *Handler) handleLogout(context echo.Context) error {
 	cookie.HttpOnly = true
 	context.SetCookie(cookie)
 	return context.String(http.StatusOK, "logged out")
+}
+func (handler *Handler) signupVerification(email string, password string, firstname string, lastname string, address string) (ok bool, msg string) {
+	if email == "" {
+		return false, "ایمیل نمی تواند خالی باشد"
+	}
+	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	if !emailRegex.MatchString(email) {
+		return false, "فرمت ایمیل معتبر نیست"
+	}
+	if len(email) > 255 {
+		return false, "طول ایمیل نمی تواند بیشتر از 255 باشد"
+	}
+	if password == "" {
+		return false, "پسورد نمی تواند خالی باشد"
+	}
+	if len(password) < 8 {
+		return false, "طول پسورد باید حداقل 8 باشد"
+	}
+	if len(password) > 255 {
+		return false, "طول پسورد نمی تواند بیشتر از 255 باشد"
+	}
+	if firstname == "" {
+		return false, "نام نمی تواند خالی باشد"
+	}
+	if len(firstname) > 255 {
+		return false, "نام نمی تواند بیشتر از 255 باشد"
+	}
+	if lastname == "" {
+		return false, "نام خانوادگی نمی تواند خالی باشد"
+	}
+	if len(lastname) > 255 {
+		return false, "نام خانوادگی نمی تواند بیشتر از 255 باشد"
+	}
+	if address == "" {
+		return false, "آدرس نمی تواند خالی باشد"
+	}
+	if len(address) > 1000 {
+		return false, "آدرس نمی تواند بیشتر از 1000 باشد"
+	}
+	return true, ""
+
 }
