@@ -79,7 +79,7 @@ func (db *Database) GetReceipt(email string) []Receipt {
 	if len(email) == 0 {
 		db.postgres.Find(&receipts)
 	} else {
-		db.postgres.Where("customerEmail = ?", email).Find(&receipts)
+		db.postgres.Where("customer_email = ?", email).Find(&receipts)
 	}
 	return receipts
 }
