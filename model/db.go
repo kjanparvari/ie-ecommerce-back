@@ -93,12 +93,14 @@ func (db *Database) RiseBalance(email string, amount int) {
 
 // ModifyCategory COMPLETE
 func (db *Database) ModifyCategory(newName string, oldName string) int {
+	log.Println("[Database]: requested to modify category")
+	log.Println("[Database]: oldCat: ", oldName, " newCat: ", newName)
 	categories := make([]Category, 20)
 	db.postgres.Where("name = ?", newName).Find(&categories)
 	if len(categories) > 0 {
 		return 0
 	}
-	db.postgres.Model(Category{}).Where("name = ?", newName).Updates(Category{Name: newName})
+	db.postgres.Model(Category{}).Where("name = ?", oldName).Updates(Category{Name: newName})
 	db.postgres.Model(Product{}).Where("category = ?", oldName).Updates(Product{Category: newName})
 	return 1
 }
@@ -251,8 +253,8 @@ func (db *Database) BuyProduct(email string, name string, number int) string {
 	db.postgres.Model(User{}).Where("email = ?", email).Updates(User{Balance: users[0].Balance - number*products[0].Price})
 	// Using time.Now() function.
 	dt := time.Now()
-	formatedTime := dt.Format(time.RFC1123)
-	db.AddReceipt(name, number, email, users[0].Firstname, users[0].Lastname, users[0].Address, number*products[0].Price, formatedTime, formatedTime+email, "در حال انجام")
+	formattedTime := dt.Format(time.RFC1123)
+	db.AddReceipt(name, number, email, users[0].Firstname, users[0].Lastname, users[0].Address, number*products[0].Price, formattedTime, formattedTime+email, "در حال انجام")
 	return "Done"
 }
 

@@ -30,14 +30,14 @@ type Category struct {
 }
 
 type Receipt struct {
-	ProductName       string
-	SoldNumber        int
-	CustomerEmail     string
-	CustomerFirstname string
-	CustomerLastname  string
-	CustomerAddress   string
-	Amount            int
-	Date              string
-	TracingCode       string
-	Status            string
+	ProductName       string `json:"product_name"`
+	SoldNumber        int    `json:"sold_number"`
+	CustomerEmail     string `json:"customer_email"`
+	CustomerFirstname string `json:"customer_firstname"`
+	CustomerLastname  string `json:"customer_lastname"`
+	CustomerAddress   string `json:"customer_address"`
+	Amount            int    `json:"amount"`
+	Date              string `json:"date"`
+	TracingCode       string `json:"tracing_code"`
+	Status            string `json:"status"`
 }
