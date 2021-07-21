@@ -34,19 +34,19 @@ func (handler *Handler) Init(db *model.Database) {
 		//AllowOrigins: []string{"https://labstack.com", "https://labstack.net"},
 		//AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 	}))
-	handler.echo.GET("/api/categories/all", handler.handleGetCategories)
+	handler.echo.GET("/api/categories", handler.handleGetCategories)
 	handler.echo.POST("/api/signup", handler.handleSignup)
 	handler.echo.POST("/api/login", handler.handleLogin)
 	handler.echo.GET("/api/user", handler.handleGetUser)
 	handler.echo.GET("/api/admin", handler.handleGetAdmin)
 	handler.echo.POST("/api/logout", handler.handleLogout)
 	handler.echo.GET("/api/products", handler.handlerGetProducts)
-	handler.echo.POST("/api/products/modify", handler.handlerModifyProduct)
-	handler.echo.POST("/api/products/delete", handler.handlerDeleteProduct)
+	handler.echo.POST("/api/admin/products/modify", handler.handlerModifyProduct)
+	handler.echo.POST("/api/admin/products/delete", handler.handlerDeleteProduct)
 	handler.echo.POST("/api/user/modify", handler.handlerModifyUser)
-	handler.echo.POST("/api/categories/modify", handler.handlerModifyCategory)
-	handler.echo.POST("/api/categories/add", handler.handlerAddCategory)
-	handler.echo.POST("/api/categories/delete", handler.handlerDeleteCategory)
+	handler.echo.POST("/api/admin/categories/modify", handler.handlerModifyCategory)
+	handler.echo.POST("/api/admin/categories/add", handler.handlerAddCategory)
+	handler.echo.POST("/api/admin/categories/delete", handler.handlerDeleteCategory)
 	handler.echo.POST("/api/user/risePrice", handler.handlerRisePrice)
 	handler.echo.POST("/api/admin/products/add", handler.handlerAddProduct)
 	handler.echo.GET("/api/admin/receipt", handler.handlerGetReceiptAdmin)
@@ -58,7 +58,22 @@ func (handler *Handler) Init(db *model.Database) {
 		return
 	}
 }
+func (handler *Handler) checkAdminPrivilege(context echo.Context) bool {
+	isAuth, token := handler.authenticate(context)
+	if !isAuth {
+		return false
+	}
+	_email := token.Claims.(*jwt.StandardClaims).Issuer
+	admin := handler.db.GetAdmin(_email)
+	if admin == nil {
+		return false
+	}
+	return true
+}
 func (handler *Handler) handlerChangeStatus(context echo.Context) error {
+	if !handler.checkAdminPrivilege(context) {
+		return context.String(http.StatusUnauthorized, "unauthenticated")
+	}
 	code := context.QueryParam("code")
 	status := context.QueryParam("status")
 	handler.db.ChangeReceiptStatus(code, status)
@@ -84,6 +99,9 @@ func (handler *Handler) handlerGetReceiptUser(context echo.Context) error {
 	}
 }
 func (handler *Handler) handlerGetReceiptAdmin(context echo.Context) error {
+	if !handler.checkAdminPrivilege(context) {
+		return context.String(http.StatusUnauthorized, "unauthenticated")
+	}
 	raw := handler.db.GetReceipt("")
 	_json, err := json.Marshal(raw)
 	if err != nil {
@@ -101,6 +119,9 @@ func (handler *Handler) handlerRisePrice(context echo.Context) error {
 	return context.String(http.StatusOK, "OK")
 }
 func (handler *Handler) handlerModifyProduct(context echo.Context) error {
+	if !handler.checkAdminPrivilege(context) {
+		return context.String(http.StatusUnauthorized, "unauthenticated")
+	}
 	name := context.QueryParam("name")
 	category := context.QueryParam("category")
 	price, _ := strconv.Atoi(context.QueryParam("price"))
@@ -109,16 +130,25 @@ func (handler *Handler) handlerModifyProduct(context echo.Context) error {
 	return context.String(http.StatusOK, "OK")
 }
 func (handler *Handler) handlerDeleteProduct(context echo.Context) error {
+	if !handler.checkAdminPrivilege(context) {
+		return context.String(http.StatusUnauthorized, "unauthenticated")
+	}
 	name := context.QueryParam("name")
 	handler.db.DeleteProduct(name)
 	return context.String(http.StatusOK, "OK")
 }
 func (handler *Handler) handlerDeleteCategory(context echo.Context) error {
+	if !handler.checkAdminPrivilege(context) {
+		return context.String(http.StatusUnauthorized, "unauthenticated")
+	}
 	name := context.QueryParam("name")
 	handler.db.DeleteCategory(name)
 	return context.String(http.StatusOK, "OK")
 }
 func (handler *Handler) handlerAddCategory(context echo.Context) error {
+	if !handler.checkAdminPrivilege(context) {
+		return context.String(http.StatusUnauthorized, "unauthenticated")
+	}
 	name := context.QueryParam("name")
 	correctness := handler.db.AddCategory(name)
 	if correctness == 0 {
@@ -128,6 +158,10 @@ func (handler *Handler) handlerAddCategory(context echo.Context) error {
 }
 
 func (handler *Handler) handlerAddProduct(context echo.Context) error {
+	if !handler.checkAdminPrivilege(context) {
+		return context.String(http.StatusUnauthorized, "unauthenticated")
+	}
+	log.Println("[Server]: requested to add product")
 	name := context.QueryParam("name")
 	category := context.QueryParam("category")
 	price, _ := strconv.Atoi(context.QueryParam("price"))
@@ -138,12 +172,16 @@ func (handler *Handler) handlerAddProduct(context echo.Context) error {
 		category = "دسته بندی نشده"
 		returnString = "Category Changes"
 	}
+	log.Println("[Server]: new product: ", name, category, price, stock)
 	handler.db.AddProduct(name, category, price, stock, 0)
 	return context.String(http.StatusOK, returnString)
 
 }
 
 func (handler *Handler) handlerModifyCategory(context echo.Context) error {
+	if !handler.checkAdminPrivilege(context) {
+		return context.String(http.StatusUnauthorized, "unauthenticated")
+	}
 	newName := context.QueryParam("newName")
 	oldName := context.QueryParam("oldName")
 	correctness := handler.db.ModifyCategory(newName, oldName)

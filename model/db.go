@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 	"log"
@@ -158,10 +157,10 @@ func (db *Database) GetProductSort(name string, sortType string, categories []st
 	products := make([]Product, 10)
 	arrayProducts := make([]Product, 0)
 	var result *gorm.DB
-	fmt.Println(sortType)
-	fmt.Println(categories)
-	fmt.Println(maxPrice)
-	fmt.Println(minPrice)
+	//fmt.Println(sortType)
+	//fmt.Println(categories)
+	//fmt.Println(maxPrice)
+	//fmt.Println(minPrice)
 	if len(name) == 0 {
 		result = db.postgres.Order(sortType).Where("price>? AND price<?", minPrice, maxPrice).Find(&products)
 	} else {
