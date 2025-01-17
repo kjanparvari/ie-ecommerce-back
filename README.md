@@ -16,7 +16,7 @@ The backend of a simple eCommerce website developed with **Golang** and **Postgr
 This repository contains the server-side implementation of the eCommerce platform, focusing on building scalable and high-performance APIs.  
 
 ## Acknowledgements  
-This project is part of the **Internet Engineering course**. The frontend repository can be found [here](URL-to-frontend-repo).  
+This project is part of the **Internet Engineering course**. The frontend repository can be found [here]([URL-to-frontend-repo](https://github.com/kjanparvari/ie-ecommerce-front)).  
 
 ## License  
 This project is licensed under the AUT License. See the [LICENSE](LICENSE) file for details.  
