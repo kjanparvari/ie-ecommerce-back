@@ -1,6 +1,6 @@
 # E-Commerce Website Backend  
 
-The backend of a simple eCommerce website developed with **Golang** and **PostgreSQL**. This project provides robust APIs for managing products, user authentication, and order processing.  
+The backend of a simple eCommerce website developed with **Golang** and **PostgreSQL**. This project is part of the **Internet Engineering course** at and provides robust APIs for managing products, user authentication, and order processing.  
 
 ## Features  
 - RESTful API for managing products, users, and orders.  
@@ -13,10 +13,10 @@ The backend of a simple eCommerce website developed with **Golang** and **Postgr
 - **Database**: PostgreSQL  
 
 ## Purpose  
-This repository contains the server-side implementation of the eCommerce platform, focusing on building a scalable and high-performance API.  
+This repository contains the server-side implementation of the eCommerce platform, focusing on building scalable and high-performance APIs.  
 
 ## Acknowledgements  
-This project is part of a full-stack eCommerce application. The frontend repository can be found [here](URL-to-frontend-repo).  
+This project is part of the **Internet Engineering course**. The frontend repository can be found [here](URL-to-frontend-repo).  
 
 ## License  
 This project is licensed under the AUT License. See the [LICENSE](LICENSE) file for details.  
